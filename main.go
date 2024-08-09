@@ -2,8 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
+
+	"github.com/jedyEvgeny/simple_telegram_bot/clients/telegram"
 )
 
 func main() {
@@ -15,7 +16,8 @@ func main() {
 	//consumer.Start(fetcher, processor) //для получения и обработки событий
 	//Фетчер и процессор будут общаться с API телеграма
 	t := mustToken()
-	fmt.Println(t)
+	h := mustHost() //для гибкости приложения хост не константный
+	tgClient := telegram.New(h, t)
 }
 
 // приставка must делается для функций, которые вместо возвращения ошибки,
@@ -32,4 +34,16 @@ func mustToken() string {
 		log.Fatal("Токен не указан")
 	}
 	return *token
+}
+
+func mustHost() string {
+	var host string
+	flag.StringVar(
+		&host,
+		"host-bot-host",
+		"api.telegram.org",
+		"хост для гибкости приложения. Оставьте пустым для значения по-умолчанию",
+	)
+	log.Println("Выбран хост: ", host)
+	return host
 }

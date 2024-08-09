@@ -3,6 +3,7 @@
 package telegram
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -11,6 +12,11 @@ import (
 	"strconv"
 
 	"github.com/jedyEvgeny/simple_telegram_bot/lib/e"
+)
+
+const (
+	getUpdatesMethod  = "getUpdates"
+	sendMessageMethod = "sendMessage"
 )
 
 type Client struct {
@@ -29,23 +35,44 @@ func New(h string, token string) Client { //разные типы данных, 
 	}
 }
 
-func newBasePath(token string) string {
-	return "bot" + token
-}
-
 // Update получает сообщения
-func (c *Client) Updates(offset, limit int) ([]Update, error) {
+func (c *Client) Updates(offset, limit int) (updates []Update, err error) {
+	defer func() { err = e.WrapIfErr("не смогли получить обновления", err) }()
 	//Формируем параметры запроса
 	q := url.Values{}
 	q.Add("offset", strconv.Itoa(offset)) //Добавляем параметры к запросу
 	q.Add("limit", strconv.Itoa(limit))   //Добавляем параметры к запросу
 	log.Println("Создали запрос: ", q)
 	//Запрос будет одинаковым для всех методов
+	data, err := c.doRequest(getUpdatesMethod, q)
+	if err != nil {
+		return nil, err
+	}
+	var res UpdatesResponse
+	err = json.Unmarshal(data, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res.Result, nil
 }
 
 // SendMessage отправляет сообщения пользователям бота
-func (c *Client) SendMessage() {
+func (c *Client) SendMessage(chatID int, text string) error {
+	//Подготавливаем параметры запроса
+	q := url.Values{}
+	q.Add("chat_id", strconv.Itoa(chatID)) //Первый аргумент из документации TG-API: https://core.telegram.org/bots/api#sendmessage
+	q.Add("text", text)                    //Также
 
+	//Тело ответа нам не нужно
+	_, err := c.doRequest(sendMessageMethod, q)
+	if err != nil {
+		return e.Wrap("не смогли отправить сообщение", err)
+	}
+	return nil
+}
+
+func newBasePath(token string) string {
+	return "bot" + token
 }
 
 func (c *Client) doRequest(method string, query url.Values) (data []byte, err error) {
