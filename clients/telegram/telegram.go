@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	getUpdatesMethod  = "getUpdates"
-	sendMessageMethod = "sendMessage"
+	getUpdatesMethod  = "getUpdates"  //из документации API-Телеграма
+	sendMessageMethod = "sendMessage" //из документации API-Телеграма
 )
 
 type Client struct {
@@ -27,15 +27,15 @@ type Client struct {
 
 // New создаёт клиент
 func New(h string, token string) Client { //разные типы данных, т.к. токен в теории может быть интеджером
-	url := newBasePath(token)
+	apiPath := newBasePath(token)
 	return Client{
 		host:     h,
-		basePath: url,
+		basePath: apiPath,
 		client:   http.Client{},
 	}
 }
 
-// Update получает сообщения
+// Update получает сообщения от пользователей бота
 func (c *Client) Updates(offset, limit int) (updates []Update, err error) {
 	defer func() { err = e.WrapIfErr("не смогли получить обновления", err) }()
 	//Формируем параметры запроса
@@ -43,7 +43,8 @@ func (c *Client) Updates(offset, limit int) (updates []Update, err error) {
 	q.Add("offset", strconv.Itoa(offset)) //Добавляем параметры к запросу
 	q.Add("limit", strconv.Itoa(limit))   //Добавляем параметры к запросу
 	log.Println("Создали запрос: ", q)
-	//Запрос будет одинаковым для всех методов
+
+	//Запрос будет одинаковым для всех методов, поэтому выводим в отдельный метод
 	data, err := c.doRequest(getUpdatesMethod, q)
 	if err != nil {
 		return nil, err
@@ -75,23 +76,32 @@ func newBasePath(token string) string {
 	return "bot" + token
 }
 
+// doRequest формирует запрос для отправки, отправляет его и получает ответ
 func (c *Client) doRequest(method string, query url.Values) (data []byte, err error) {
 	defer func() {
 		err = e.WrapIfErr("не выполнен запрос", err)
 	}()
-	u := url.URL{
-		Scheme: "https",
+	fullPath := path.Join(c.basePath, method) //убирает лишние слешы или добавляет недостающие
+	//формируем URL на который будет отправляться запрос
+	u := url.URL{ //Выглядит примерно так: https://api.telegram.org/bot1234567890/getUpdates
+		Scheme: "https", //протокол
 		Host:   c.host,
-		Path:   path.Join(c.basePath, method),
+		Path:   fullPath,
 	}
+
+	//формируем объект запроса
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil) //Тело запроса пустое, т.к. метод GET обычно без тела,
 	// и всё необходимое указано в виде параметров
+	// Выглядит примерно так: &{GET https://api.telegram.org/bot1234567890/getUpdates HTTP/1.1 1 1 map[] <nil> <nil> 0 [] false api.telegram.org map[] map[] <nil> map[]   <nil> <nil> <nil> {{}}}
+
 	if err != nil {
 		return nil, err
 	}
-	req.URL.RawQuery = query.Encode() //Передаём объект req (реквест) в параметры запроса, полученные в аргументе сигнатуры
 
-	//отправляем получившийся запрос
+	//Добавляем к объекту запроса req параметры запроса из сигнатуры функции
+	req.URL.RawQuery = query.Encode()
+
+	//отправляем получившийся запрос в ожидании ответа
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -99,6 +109,8 @@ func (c *Client) doRequest(method string, query url.Values) (data []byte, err er
 	defer func() {
 		_ = resp.Body.Close()
 	}()
+
+	// Получаем содержимое ответа
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err

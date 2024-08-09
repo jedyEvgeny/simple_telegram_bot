@@ -42,7 +42,7 @@ func mustHost() string {
 		&host,
 		"host-bot-host",
 		"api.telegram.org",
-		"хост для гибкости приложения. Оставьте пустым для значения по-умолчанию",
+		"хост API-сервиса Телеграм",
 	)
 	log.Println("Выбран хост: ", host)
 	return host
