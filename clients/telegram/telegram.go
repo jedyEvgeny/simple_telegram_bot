@@ -72,6 +72,7 @@ func (c *Client) SendMessage(chatID int, text string) error {
 	return nil
 }
 
+// newBasePath формирует базовый путь запроса
 func newBasePath(token string) string {
 	return "bot" + token
 }
