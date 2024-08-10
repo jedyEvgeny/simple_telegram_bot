@@ -84,7 +84,7 @@ func (c *Client) doRequest(method string, query url.Values) (data []byte, err er
 	}()
 	fullPath := path.Join(c.basePath, method) //убирает лишние слешы или добавляет недостающие
 	//формируем URL на который будет отправляться запрос
-	u := url.URL{ //Выглядит примерно так: https://api.telegram.org/bot1234567890/getUpdates
+	u := url.URL{ //Результат выглядит примерно так: https://api.telegram.org/bot1234567890/getUpdates
 		Scheme: "https", //протокол
 		Host:   c.host,
 		Path:   fullPath,
@@ -101,6 +101,7 @@ func (c *Client) doRequest(method string, query url.Values) (data []byte, err er
 
 	//Добавляем к объекту запроса req параметры запроса из сигнатуры функции
 	req.URL.RawQuery = query.Encode()
+	//Пример результата: &{GET https://api.telegram.org/bot1234567890/getUpdates?chat_id=1234567890&text=Hello%2C+world%21 HTTP/1.1 1 1 map[] <nil> <nil> 0 [] false api.telegram.org map[] map[] <nil> map[]   <nil> <nil> <nil> {{}}}
 
 	//отправляем получившийся запрос в ожидании ответа
 	resp, err := c.client.Do(req)
