@@ -109,6 +109,7 @@ func (s Storage) Remove(p *storage.Page) error {
 		return e.Wrap("не смогли удалить файл", err)
 	}
 	path := filepath.Join(s.basePath, p.UserName, fName)
+	err = os.Remove(path)
 	if err != nil {
 		msg := fmt.Sprintf("не смогли удалить файл %s", path) //прописываем путь к файлу, который не смогли удалить
 		return e.Wrap(msg, err)
