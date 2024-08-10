@@ -85,24 +85,6 @@ func (s Storage) PickRandom(userName string) (page *storage.Page, err error) {
 	return s.decodePage(fullfPath)
 }
 
-func (s Storage) decodePage(filePath string) (*storage.Page, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, e.Wrap("не смогли декодировать страницу", err)
-	}
-	defer func() { _ = f.Close() }()
-
-	//Создаём переменную, в которую файл будет декодирован
-	var p storage.Page
-
-	//Декодируем файл
-	err = gob.NewDecoder(f).Decode(&p)
-	if err != nil {
-		return nil, e.Wrap("не смогли декодировать страницу", err)
-	}
-	return &p, nil
-}
-
 func (s Storage) Remove(p *storage.Page) error {
 	fName, err := fileName(p)
 	if err != nil {
@@ -137,4 +119,22 @@ func (s Storage) IsExists(p *storage.Page) (bool, error) {
 
 func fileName(p *storage.Page) (string, error) {
 	return p.Hash()
+}
+
+func (s Storage) decodePage(filePath string) (*storage.Page, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, e.Wrap("не смогли декодировать страницу", err)
+	}
+	defer func() { _ = f.Close() }()
+
+	//Создаём переменную, в которую файл будет декодирован
+	var p storage.Page
+
+	//Декодируем файл
+	err = gob.NewDecoder(f).Decode(&p)
+	if err != nil {
+		return nil, e.Wrap("не смогли декодировать страницу", err)
+	}
+	return &p, nil
 }
