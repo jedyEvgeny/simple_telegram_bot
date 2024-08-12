@@ -23,15 +23,16 @@ type Page struct {
 	UserName string
 }
 
-func (p Page) Hash() (string, error) {
+func (p Page) Hash() (hash string, err error) {
+	defer func() { err = e.Wrap("не смогли рассчитать хеш", err) }()
 	h := sha1.New()
-	_, err := io.WriteString(h, p.URL)
+	_, err = io.WriteString(h, p.URL)
 	if err != nil {
-		return "", e.Wrap("не смогли рассчитать хеш", err)
+		return "", err
 	}
 	_, err = io.WriteString(h, p.UserName)
 	if err != nil {
-		return "", e.Wrap("не смогли рассчитать хеш", err)
+		return "", err
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }

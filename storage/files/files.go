@@ -121,20 +121,18 @@ func fileName(p *storage.Page) (string, error) {
 	return p.Hash()
 }
 
-func (s Storage) decodePage(filePath string) (*storage.Page, error) {
+func (s Storage) decodePage(filePath string) (p *storage.Page, err error) {
+	defer func() { err = e.WrapIfErr("не смогли декодировать страницу", err) }()
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, e.Wrap("не смогли декодировать страницу", err)
+		return nil, err
 	}
 	defer func() { _ = f.Close() }()
-
-	//Создаём переменную, в которую файл будет декодирован
-	var p storage.Page
 
 	//Декодируем файл
 	err = gob.NewDecoder(f).Decode(&p)
 	if err != nil {
-		return nil, e.Wrap("не смогли декодировать страницу", err)
+		return nil, err
 	}
-	return &p, nil
+	return p, nil
 }
