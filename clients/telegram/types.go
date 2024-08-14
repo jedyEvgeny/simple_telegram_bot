@@ -17,10 +17,12 @@ type IncomingMessage struct {
 	Chat Chat   `json:"chat"`
 }
 
+//Для понимания от кого сообщение
 type From struct {
 	Username string `json:"username"`
 }
 
+//Для понимания, как отправить ответное сообщение
 type Chat struct {
 	ID int `json:"id"`
 }

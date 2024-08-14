@@ -1,3 +1,4 @@
+// Обработчик событий
 package telegram
 
 import (
@@ -23,7 +24,7 @@ type Meta struct {
 var (
 	ErrUncknownEventType = errors.New("неизвестный тип события")
 	ErrEmptyUpdates      = errors.New("внутренняя ошибка")
-	ErrUncknownMeta      = errors.New("неизвестный тип Meta")
+	ErrUncknownMetaType  = errors.New("неизвестный тип Meta")
 )
 
 func New(client *telegram.Client, storage storage.Storage) *Proceccor {
@@ -66,23 +67,32 @@ func (p *Proceccor) Fetch(limit int) ([]events.Event, error) {
 func (p *Proceccor) Process(event events.Event) error {
 	switch event.Type {
 	case events.Message: //когда работаем с сообщением
-		p.ProcessMessage(event)
+		return p.ProcessMessage(event)
 	default: //Когда не знаем с чем работаем
 		return e.Wrap("не смогли выполнить сообщение", ErrUncknownEventType)
 	}
 }
 
-func (p *Proceccor) ProcessMessage(event events.Event) {
+// ProcessMessage выполняет работу с сообщениями Телеграма
+func (p *Proceccor) ProcessMessage(event events.Event) error {
 	meta, err := meta(event)
 	if err != nil {
 		return e.Wrap("не смогли выполнить сообщение", err)
 	}
+
+	//Требуется отдельная логика при получении каждого вида сообщений
+	err = p.doCmd(event.Text, meta.ChatID, meta.Username)
+	if err != nil {
+		return e.Wrap("не смогли выполнить сообщение", err)
+	}
+	return nil
 }
 
 func meta(event events.Event) (Meta, error) {
+	//тайп-ассершен для Мета
 	res, ok := event.Meta.(Meta)
 	if !ok {
-		return Meta{}, e.Wrap("не смогли получить Meta")
+		return Meta{}, e.Wrap("не смогли получить Meta", ErrUncknownMetaType)
 	}
 	return res, nil
 }

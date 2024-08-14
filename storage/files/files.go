@@ -19,9 +19,6 @@ type Storage struct {
 
 const defaultPerm = 0774
 
-// Вынесли как переменную пакета, чтобы ошибку можно было проверить "снаружи"
-var ErrNoSavePages = errors.New("нет сохранённых страниц")
-
 func New(b string) Storage {
 	return Storage{basePath: b}
 }
@@ -72,7 +69,7 @@ func (s Storage) PickRandom(userName string) (page *storage.Page, err error) {
 		return nil, err
 	}
 	if len(files) == 0 {
-		return nil, ErrNoSavePages
+		return nil, storage.ErrNoSavePages
 	}
 
 	// rand.Seed(time.Now().UnixNano())
