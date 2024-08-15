@@ -4,7 +4,15 @@ import (
 	"flag"
 	"log"
 
-	"github.com/jedyEvgeny/simple_telegram_bot/clients/telegram"
+	tgClient "github.com/jedyEvgeny/simple_telegram_bot/clients/telegram"
+	event_consumer "github.com/jedyEvgeny/simple_telegram_bot/consumer/event-consumer"
+	"github.com/jedyEvgeny/simple_telegram_bot/events/telegram"
+	"github.com/jedyEvgeny/simple_telegram_bot/storage/files"
+)
+
+const (
+	storagePath = "storage" //вынести в конфиг
+	batchSize   = 100       //Размер пачки
 )
 
 func main() {
@@ -15,9 +23,23 @@ func main() {
 	//processor = processor.New(tgClient) - нужен для обработки событий и будет отправлять нам новые сообщения (в боте)
 	//consumer.Start(fetcher, processor) //для получения и обработки событий
 	//Фетчер и процессор будут общаться с API телеграма
-	t := mustToken()
-	h := mustHost() //для гибкости приложения хост не константный
-	tgClient := telegram.New(h, t)
+	t := mustToken() //Получаем токен бота через консоль
+	h := mustHost()  //для гибкости приложения хост не константный
+	eventsProseccor := telegram.New(
+		tgClient.New(h, t),
+		files.New(storagePath),
+	)
+
+	log.Println("сервис запущен")
+
+	//Запускаем консьюмера
+	consumer := event_consumer.New(eventsProseccor, eventsProseccor, batchSize)
+
+	err := consumer.Start()
+	//Ошибка только если косньюмер аварийно остановился
+	if err != nil {
+		log.Fatal()
+	}
 }
 
 // приставка must делается для функций, которые вместо возвращения ошибки,

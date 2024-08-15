@@ -25,10 +25,10 @@ type Client struct {
 	client   http.Client //Чтобы не создавать для каждого запроса отдельно
 }
 
-// New создаёт клиент
-func New(h string, token string) Client { //разные типы данных, т.к. токен в теории может быть интеджером
+// New создаёт клиента
+func New(h string, token string) *Client { //разные типы данных, т.к. токен в теории может быть интеджером
 	apiPath := newBasePath(token)
-	return Client{
+	return &Client{
 		host:     h,
 		basePath: apiPath,
 		client:   http.Client{},
