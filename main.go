@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	storagePath = "storage" //вынести в конфиг
-	batchSize   = 100       //Размер пачки
+	storagePath = "files_storage" //вынести в конфиг
+	host        = "api.telegram.org"
+	batchSize   = 100 //Размер пачки
 )
 
 func main() {
@@ -23,10 +24,12 @@ func main() {
 	//processor = processor.New(tgClient) - нужен для обработки событий и будет отправлять нам новые сообщения (в боте)
 	//consumer.Start(fetcher, processor) //для получения и обработки событий
 	//Фетчер и процессор будут общаться с API телеграма
+
 	t := mustToken() //Получаем токен бота через консоль
-	h := mustHost()  //для гибкости приложения хост не константный
+	// h := mustHost()  //для гибкости приложения хост не константный
+
 	eventsProseccor := telegram.New(
-		tgClient.New(h, t),
+		tgClient.New(host, t),
 		files.New(storagePath),
 	)
 
@@ -47,7 +50,7 @@ func main() {
 // В основном применяется для запуска программы и парсинга конфигов
 func mustToken() string {
 	token := flag.String( //ссылка на функции
-		"token-bot-token",
+		"tg-bot-token",
 		"", //значение по-умолчанию задаём пустое, т.к. токен - обязательный
 		"токен для доступа в телеграм", //подсказка к флагу, видимая после компиляции
 	)
@@ -59,13 +62,26 @@ func mustToken() string {
 }
 
 func mustHost() string {
-	var host string
-	flag.StringVar(
-		&host,
-		"host-bot-host",
+	host := flag.String(
+		"tg-bot-host",
 		"api.telegram.org",
 		"хост API-сервиса Телеграм",
 	)
 	log.Println("Выбран хост: ", host)
-	return host
+	if *host == "" {
+		log.Fatal("Токен не указан")
+	}
+	return *host
 }
+
+// func mustHost() string {
+// 	var host string
+// 	flag.StringVar(
+// 		&host,
+// 		"tg-bot-host",
+// 		"api.telegram.org",
+// 		"хост API-сервиса Телеграм",
+// 	)
+// 	log.Println("Выбран хост: ", host)
+// 	return host
+// }
