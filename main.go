@@ -12,7 +12,7 @@ import (
 
 const (
 	storagePath = "files_storage" //вынести в конфиг
-	host        = "api.telegram.org"
+	tgBotHost   = "api.telegram.org"
 	batchSize   = 100 //Размер пачки
 )
 
@@ -29,7 +29,7 @@ func main() {
 	// h := mustHost()  //для гибкости приложения хост не константный
 
 	eventsProseccor := telegram.New(
-		tgClient.New(host, t),
+		tgClient.New(tgBotHost, t),
 		files.New(storagePath),
 	)
 
@@ -41,7 +41,7 @@ func main() {
 	err := consumer.Start()
 	//Ошибка только если косньюмер аварийно остановился
 	if err != nil {
-		log.Fatal()
+		log.Fatal("сервис остановлен", err)
 	}
 }
 

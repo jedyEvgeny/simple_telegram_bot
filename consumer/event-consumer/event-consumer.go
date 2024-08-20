@@ -45,7 +45,7 @@ func (c Consumer) Start() error {
 		}
 		err = c.handleEvents(gotEvents)
 		if err != nil {
-			log.Println(err)
+			log.Print(err)
 			continue
 		}
 	}
@@ -57,22 +57,38 @@ func (c Consumer) Start() error {
 // Проблема 3: параллельная обработка
 
 func (c *Consumer) handleEvents(events []events.Event) error {
-	wg.Add(len(events))
 	for _, event := range events {
-		go c.handleOneEvent(event)
+		log.Printf("got new event: %s", event.Text)
+
+		if err := c.processor.Process(event); err != nil {
+			log.Printf("can't handle event: %s", err.Error())
+
+			continue
+		}
 	}
-	wg.Wait()
+
 	return nil
 }
 
-func (c *Consumer) handleOneEvent(event events.Event) {
-	defer wg.Done()
-	log.Printf("получено новое событие: %s\n", event.Text)
+//С горутинами
 
-	//Обрабатываем событие с помощью процессора
-	err := c.processor.Process(event)
-	if err != nil {
-		log.Println("не смогли обработать событие: ", err.Error())
-		return
-	}
-}
+// func (c *Consumer) handleEvents(events []events.Event) error {
+// 	wg.Add(len(events))
+// 	for _, event := range events {
+// 		go c.handleOneEvent(event)
+// 	}
+// 	wg.Wait()
+// 	return nil
+// }
+
+// func (c *Consumer) handleOneEvent(event events.Event) {
+// 	defer wg.Done()
+// 	log.Printf("получено новое событие: %s\n", event.Text)
+
+// 	//Обрабатываем событие с помощью процессора
+// 	err := c.processor.Process(event)
+// 	if err != nil {
+// 		log.Println("не смогли обработать событие: ", err.Error())
+// 		return
+// 	}
+// }

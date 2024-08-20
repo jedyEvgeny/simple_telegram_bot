@@ -64,6 +64,7 @@ func (s Storage) PickRandom(userName string) (page *storage.Page, err error) {
 	//Определяем способ обработки ошибок
 	defer func() { err = e.WrapIfErr("не смогли выбрать случайную страницу", err) }()
 	fPath := filepath.Join(s.basePath, userName)
+	
 	files, err := os.ReadDir(fPath)
 	if err != nil {
 		return nil, err

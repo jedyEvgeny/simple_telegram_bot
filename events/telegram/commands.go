@@ -50,7 +50,7 @@ func (p *Proceccor) doCmd(text string, chatID int, username string) error {
 
 func (p *Proceccor) savePage(chatID int, pageURL string, username string) (err error) {
 	defer func() {
-		err = e.WrapIfErr("не смогли выполнить команду сохранить страницу", err)
+		err = e.WrapIfErr("не смогли выполнить команду 'сохранить страницу'", err)
 	}()
 
 	//подготавливаем страницу, которую собираемся сохранить
@@ -85,7 +85,7 @@ func (p *Proceccor) savePage(chatID int, pageURL string, username string) (err e
 
 func (p *Proceccor) sendRandom(chatID int, username string) (err error) {
 	defer func() {
-		err = e.WrapIfErr("не смогли отправить случайную страницу", err)
+		err = e.WrapIfErr("не смогли выполнить команду 'отправка случайной страницы'", err)
 	}()
 	page, err := p.storage.PickRandom(username)
 	if err != nil && !errors.Is(err, storage.ErrNoSavePages) {
@@ -112,7 +112,7 @@ func (p *Proceccor) sendHello(chatID int) error {
 	return p.tg.SendMessage(chatID, msgHello)
 }
 
-// isAddCmd проверяет, является ли текст сообщения ожидаемым для сохранения параметром
+// isAddCmd проверяет, является ли текст сообщения ожидаемым для сохранения параметром (ссылкой на сайт)
 func isAddCmd(text string) bool {
 	return isUrl(text)
 }

@@ -5,7 +5,6 @@ package telegram
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -26,10 +25,10 @@ type Client struct {
 }
 
 // New создаёт клиента
-func New(h string, token string) *Client { //разные типы данных, т.к. токен в теории может быть интеджером
+func New(host string, token string) *Client { //разные типы данных, т.к. токен в теории может быть интеджером
 	apiPath := newBasePath(token)
 	return &Client{
-		host:     h,
+		host:     host,
 		basePath: apiPath,
 		client:   http.Client{},
 	}
@@ -42,14 +41,16 @@ func (c *Client) Updates(offset, limit int) (updates []Update, err error) {
 	q := url.Values{}
 	q.Add("offset", strconv.Itoa(offset)) //Добавляем параметры к запросу
 	q.Add("limit", strconv.Itoa(limit))   //Добавляем параметры к запросу
-	log.Println("Создали запрос: ", q)
+	// log.Println("Создали запрос: ", q)
 
 	//Запрос будет одинаковым для всех методов, поэтому выводим в отдельный метод
 	data, err := c.doRequest(getUpdatesMethod, q)
 	if err != nil {
 		return nil, err
 	}
+
 	var res UpdatesResponse
+
 	err = json.Unmarshal(data, &res)
 	if err != nil {
 		return nil, err
@@ -79,9 +80,8 @@ func newBasePath(token string) string {
 
 // doRequest формирует запрос для отправки, отправляет его и получает ответ
 func (c *Client) doRequest(method string, query url.Values) (data []byte, err error) {
-	defer func() {
-		err = e.WrapIfErr("не выполнен запрос", err)
-	}()
+	defer func() { err = e.WrapIfErr("не выполнен запрос", err) }()
+
 	fullPath := path.Join(c.basePath, method) //убирает лишние слешы или добавляет недостающие
 	//формируем URL на который будет отправляться запрос
 	u := url.URL{ //Результат выглядит примерно так: https://api.telegram.org/bot1234567890/getUpdates

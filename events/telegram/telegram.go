@@ -23,8 +23,8 @@ type Meta struct {
 
 var (
 	ErrUncknownEventType = errors.New("неизвестный тип события")
-	ErrEmptyUpdates      = errors.New("внутренняя ошибка")
-	ErrUncknownMetaType  = errors.New("неизвестный тип Meta")
+	// ErrEmptyUpdates      = errors.New("внутренняя ошибка")
+	ErrUncknownMetaType = errors.New("неизвестный тип Meta")
 )
 
 func New(client *telegram.Client, storage storage.Storage) *Proceccor {
@@ -43,7 +43,7 @@ func (p *Proceccor) Fetch(limit int) ([]events.Event, error) {
 
 	//Возвращаем нулевой результат, если не нашли апдейтов
 	if len(updates) == 0 {
-		return nil, e.Wrap("список апдейтов пустой:", ErrEmptyUpdates)
+		return nil, nil
 	}
 
 	//Аллоцируем память под результат. Тип Event - более общая сущность, чем апдейты
@@ -53,8 +53,8 @@ func (p *Proceccor) Fetch(limit int) ([]events.Event, error) {
 
 	//Перебираем все апдейты и преобразуем их в тип Event пакета events
 	for _, u := range updates {
-		e := event(u)
-		res = append(res, e)
+		evt := event(u)
+		res = append(res, evt)
 	}
 
 	//Обновляем значение внутреннего поля offset, чтобы в следующий раз получить следующую пачку изменений
@@ -69,7 +69,7 @@ func (p *Proceccor) Process(event events.Event) error {
 	case events.Message: //когда работаем с сообщением
 		return p.ProcessMessage(event)
 	default: //Когда не знаем с чем работаем
-		return e.Wrap("не смогли выполнить сообщение", ErrUncknownEventType)
+		return e.Wrap("не смогли обработать сообщение", ErrUncknownEventType)
 	}
 }
 
@@ -77,13 +77,13 @@ func (p *Proceccor) Process(event events.Event) error {
 func (p *Proceccor) ProcessMessage(event events.Event) error {
 	meta, err := meta(event)
 	if err != nil {
-		return e.Wrap("не смогли выполнить сообщение", err)
+		return e.Wrap("не смогли обработать сообщение", err)
 	}
 
 	//Требуется отдельная логика при получении каждого вида сообщений
 	err = p.doCmd(event.Text, meta.ChatID, meta.Username)
 	if err != nil {
-		return e.Wrap("не смогли выполнить сообщение", err)
+		return e.Wrap("не смогли обработать сообщение", err)
 	}
 	return nil
 }
@@ -101,7 +101,7 @@ func event(upd telegram.Update) events.Event {
 	updType := fetchType(upd)
 
 	res := events.Event{
-		Type: fetchType(upd),
+		Type: updType,
 		Text: fetchText(upd),
 	}
 

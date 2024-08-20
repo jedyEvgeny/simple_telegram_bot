@@ -27,16 +27,32 @@ type Page struct {
 	UserName string
 }
 
-func (p Page) Hash() (hash string, err error) {
-	defer func() { err = e.Wrap("не смогли рассчитать хеш", err) }()
+func (p Page) Hash() (string, error) {
 	h := sha1.New()
-	_, err = io.WriteString(h, p.URL)
-	if err != nil {
-		return "", err
+
+	if _, err := io.WriteString(h, p.URL); err != nil {
+		return "", e.Wrap("can't calculate hash", err)
 	}
-	_, err = io.WriteString(h, p.UserName)
-	if err != nil {
-		return "", err
+
+	if _, err := io.WriteString(h, p.UserName); err != nil {
+		return "", e.Wrap("can't calculate hash", err)
 	}
+
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
+
+// func (p Page) Hash() (hash string, err error) {
+// 	defer func() { err = e.WrapIfErr("не смогли рассчитать хеш", err) }()
+// 	h := sha1.New()
+
+// 	_, err = io.WriteString(h, p.URL)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	_, err = io.WriteString(h, p.UserName)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return fmt.Sprintf("%x", h.Sum(nil)), nil
+// }
